@@ -23,6 +23,7 @@ import socket
 import string
 import urllib
 import urllib.request
+import json
 from contextlib import closing
 from time import sleep
 
@@ -54,7 +55,7 @@ def getgameids(filename):
 
 def getgamereviews(ids, timeout, maxretries, pause, out):
     urltemplate = string.Template(
-        'http://store.steampowered.com//appreviews/$id?start_offset=$offset&filter=recent&language=english')
+        'http://store.steampowered.com//appreviews/$id?cursor=$cursor&filter=recent&language=english')
     endre = re.compile(r'({"success":2})|(no_more_reviews)')
 
     for (dir, id_, name) in ids:
@@ -73,12 +74,13 @@ def getgamereviews(ids, timeout, maxretries, pause, out):
 
         print(dir, id_, name)
 
+        cursor = '*'
         offset = 0
-        step = 20
+        page = 1
         maxError = 10
         errorCount = 0
         while True:
-            url = urltemplate.substitute({'id': id_, 'offset': offset})
+            url = urltemplate.substitute({'id': id_, 'cursor': cursor})
             print(offset, url)
             htmlpage = download_page(url, maxretries, timeout, pause)
 
@@ -90,12 +92,15 @@ def getgamereviews(ids, timeout, maxretries, pause, out):
                     print('Max error!')
                     break
             else:
-                with open(os.path.join(gamedir, 'reviews-%s.html' % offset), 'w', encoding='utf-8') as f:
+                with open(os.path.join(gamedir, 'reviews-%s.html' % page), 'w', encoding='utf-8') as f:
                     htmlpage = htmlpage.decode()
                     if endre.search(htmlpage):
                         break
                     f.write(htmlpage)
-                offset += step
+                    page = page + 1
+                    parsed_json = (json.loads(htmlpage))
+                    cursor = parsed_json['cursor']
+
         with open(donefilename, 'w', encoding='utf-8') as f:
             pass
 
