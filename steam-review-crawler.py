@@ -23,6 +23,7 @@ import socket
 import string
 import urllib
 import urllib.request
+import urllib.parse
 import json
 from contextlib import closing
 from time import sleep
@@ -99,7 +100,7 @@ def getgamereviews(ids, timeout, maxretries, pause, out):
                     f.write(htmlpage)
                     page = page + 1
                     parsed_json = (json.loads(htmlpage))
-                    cursor = parsed_json['cursor']
+                    cursor = urllib.parse.quote(parsed_json['cursor'])
 
         with open(donefilename, 'w', encoding='utf-8') as f:
             pass
