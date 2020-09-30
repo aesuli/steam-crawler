@@ -1,6 +1,6 @@
 # STEAM crawler
 
-This set of scripts crawls STEAM website to download game reviews.
+This set of scripts crawls STEAM website to download GAME reviews.
 
 These scripts are aimed at students that want to experiment with text mining on review data.
 
