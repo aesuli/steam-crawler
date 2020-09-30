@@ -2,9 +2,9 @@
 
 This set of scripts crawls STEAM website to download game reviews.
 
-These scripts are aimed at students that want to experiment with text mining on review data.
+These scripts are aimed for students who want to experiment with text mining on review data.
 
-The script have an order of execution.
+The script has an order of execution.
 
   * _steam-game-crawler.py_ download pages that lists games into ./data/games/
 
