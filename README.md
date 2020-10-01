@@ -1,4 +1,4 @@
-# STEAM crawler
+# STEAM Crawler
 
 This set of scripts crawls STEAM website to download game reviews.
 
