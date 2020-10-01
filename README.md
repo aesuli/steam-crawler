@@ -36,7 +36,7 @@ The last script _steam-reviews-stats.py_ is a sample script that processes the r
   
   * _./data/summary.json_ number of reviews, number of played hours, number of users, number of games.
   
-On March 15, 2018 those last statistics are:
+On March 15, 2018, these were the last statistics:
 
 ```
 reviews        6614765
