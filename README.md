@@ -2,6 +2,8 @@
 
 This set of scripts crawls STEAM website to download game reviews.
 
+Also,games can we developed by pyhton as well so python is a simple, easy to learn syntax emphasizes readability and therefore reduces the cost of program maintenance. Python supports modules and packages, which encourages program modularity and code reuse.
+
 These scripts are aimed at students that want to experiment with text mining on review data.
 
 The script have an order of execution.
