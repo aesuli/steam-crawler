@@ -36,12 +36,17 @@ The last script _steam-reviews-stats.py_ is a sample script that processes the r
   
   * _./data/summary.json_ number of reviews, number of played hours, number of users, number of games.
   
-On March 15, 2018 those last statistics are:
+On 1 october,2020 steam and games stats;                                  
+  Current      Players	Peak    Today	Game                                  
+  121,171        304,349	       PLAYERUNKNOWN'S BATTLEGROUNDS     
+115,807       	131,300	        Team Fortress 2                                
+72,209        	109,591        	Monster Hunter: World                          
+59,922	        120,519	        Rocket League                                  
 
-```
-reviews        6614765
-played hours 554702535
-users          2720777
-games            26677
-```
-  
+Most played games on steam;
+     Names                                  Player Peak
+1.	  Counter-Strike: Global Offensive       977,769                                     
+2.	  Among us                               438,524                                                                                                                       
+3.	  Dota                                   2	670,547
+4.	  PLAYERUNKNOWN'S BATTLEGROUNDS	         403,693
+                                   .
