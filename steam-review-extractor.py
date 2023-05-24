@@ -53,6 +53,7 @@ def extract_reviews(basepath, outputfile_name):
                         soup = BeautifulSoup(json.loads(f.read())['html'], "html.parser")
                     except ValueError:
                         print('error on ', fullpath, file=sys.stderr)
+                        return
                     for reviewdiv in soup.findAll('div', attrs={'class': 'review_box'}):
                         helpful = 0
                         funny = 0
