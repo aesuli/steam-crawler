@@ -40,7 +40,7 @@ def download_page(url, maxretries, timeout, pause):
 
 
 def extract_games(basepath, outputfile_name):
-    gameidre = re.compile(r'/(app|sub)/([0-9]+)/')
+    gameidre = re.compile(r'/(app|bundle)/([0-9]+)/')
     gamenamere = re.compile(r'<span class="title">(.*?)</span>')
     games = dict()
     for root, _, files in os.walk(basepath):

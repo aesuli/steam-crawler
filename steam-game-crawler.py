@@ -38,10 +38,10 @@ def download_page(url, maxretries, timeout, pause):
     return htmlpage
 
 
-def getgamepages(timeout, maxretries, pause, out):
+def getgamepages(timeout, maxretries, pause, out, force):
     baseurl = 'http://store.steampowered.com/search/results?sort_by=_ASC&snr=1_7_7_230_7&page='
     page = 0
-    gameidre = re.compile(r'/(app|sub)/([0-9]+)/')
+    gameidre = re.compile(r'/(app|bundle)/([0-9]+)/')
 
     pagedir = os.path.join(out, 'pages', 'games')
     if not os.path.exists(pagedir):
@@ -49,6 +49,11 @@ def getgamepages(timeout, maxretries, pause, out):
 
     retries = 0
     while True:
+        page_file = os.path.join(pagedir, 'games-page-%s.html' % page)
+        if os.path.exists(page_file) and not force:
+            print('File %s already exists, skipping.' % page_file)
+            page += 1
+            continue
         url = '%s%s' % (baseurl, page)
         print(page, url)
         htmlpage = download_page(url, maxretries, timeout, pause)
@@ -58,7 +63,7 @@ def getgamepages(timeout, maxretries, pause, out):
             sleep(pause * 10)
         else:
             htmlpage = htmlpage.decode()
-            with open(os.path.join(pagedir, 'games-page-%s.html' % page), mode='w', encoding='utf-8') as f:
+            with open(page_file, mode='w', encoding='utf-8') as f:
                 f.write(htmlpage)
 
             pageids = set(gameidre.findall(htmlpage))
@@ -101,7 +106,7 @@ def main():
     if not os.path.exists(args.out):
         os.makedirs(args.out)
 
-    getgamepages(args.timeout, args.maxretries, args.pause, args.out)
+    getgamepages(args.timeout, args.maxretries, args.pause, args.out, args.force)
 
 
 if __name__ == '__main__':
