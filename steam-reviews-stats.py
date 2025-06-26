@@ -16,40 +16,45 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-import csv
 import json
-import sys
 from collections import defaultdict
+
+import pandas as pd
+from tqdm import tqdm
 
 
 def process_reviews(inputfile_name, output_dir):
     with open(inputfile_name, mode="r", encoding="utf-8") as inputfile:
-        totalreviews = 0
-        totalhours = 0
+        input_df = pd.read_csv(inputfile)
+        totalreviews = len(input_df)
+        totalhours = input_df['time_played'].astype(float).sum()
         users = defaultdict(lambda: defaultdict(float))
         games = defaultdict(lambda: defaultdict(float))
-        reader = csv.reader(inputfile)
-        for (id_, helpful, funny, username, owned, numrev, recco, time, posted, content) in reader:
-            time = float(time)
-            totalreviews += 1
-            totalhours += time
+        for _, row in tqdm(input_df.iterrows(), total=totalreviews):
+            username = row['username']
+            game_id = row['game_id']
+            time = float(row['time_played'])
             users[username]['games'] += 1
-            users[username]['time'] += time
-            games[id_]['reviews'] += 1
-            games[id_]['time'] += time
-            if totalreviews % 1000 == 0:
-                print('\r%i' % totalreviews, end='', flush=True, file=sys.stderr)
+            users[username]['time_played'] += time
+            games[game_id]['users'] += 1
+            games[game_id]['title'] = row['game_title']
+            games[game_id]['reviews'] += 1
+            if row['recommended'] == 1:
+                games[game_id]['recommended'] += 1
+            else:
+                games[game_id]['not_recommended'] += 1
+            games[game_id]['time_played'] += time
 
         summary = {'reviews': totalreviews,
                    'hours': totalhours,
                    'users': len(users),
                    'games': len(games)}
         with open(output_dir + '/summary.json', mode='w', encoding="utf-8") as f:
-            json.dump(summary, f)
+            json.dump(summary, f, indent=4)
         with open(output_dir + '/users.json', mode='w', encoding="utf-8") as f:
-            json.dump(users, f)
+            json.dump(users, f, indent=4)
         with open(output_dir + '/games.json', mode='w', encoding="utf-8") as f:
-            json.dump(games, f)
+            json.dump(games, f, indent=4)
 
 
 def main():

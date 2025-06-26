@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-import csv
+import pandas as pd
 import os
 import re
 import socket
@@ -43,14 +43,8 @@ def download_page(url, maxretries, timeout, pause):
 
 
 def getgameids(filename):
-    ids = set()
-    with open(filename, encoding='utf8') as f:
-        reader = csv.reader(f)
-        for row in reader:
-            dir = row[0]
-            id_ = row[1]
-            name = row[2]
-            ids.add((dir, id_, name))
+    df = pd.read_csv(filename, encoding='utf8', header=None)
+    ids = set(df.iloc[:, :3].itertuples(index=False, name=None))
     return ids
 
 
@@ -60,8 +54,8 @@ def getgamereviews(ids, timeout, maxretries, pause, out):
     endre = re.compile(r'({"success":2})|(no_more_reviews)')
 
     for (dir, id_, name) in ids:
-        if dir == 'sub':
-            print('skipping sub %s %s' % (id_, name))
+        if dir == 'bundle':
+            print('skipping bundle %s %s' % (id_, name))
             continue
 
         gamedir = os.path.join(out, 'pages', 'reviews', '-'.join((dir, id_)))

@@ -24,9 +24,11 @@ import re
 import sys
 
 from bs4 import BeautifulSoup
+import pandas as pd
+from tqdm import tqdm
 
 
-def extract_reviews(basepath, outputfile_name):
+def extract_reviews(basepath, outputfile_name, games_df, title_pattern):
     helpfulre = re.compile(r'([0-9]+) [a-z]+? found this review helpful')
     funnyre = re.compile(r'([0-9]+) [a-z]+? found this review funny')
     ownedre = re.compile(r'([0-9]+) product')
@@ -36,24 +38,29 @@ def extract_reviews(basepath, outputfile_name):
     idre = re.compile(r'app-([0-9]+)$')
     yearre = re.compile(r'.* [0-9][0-9][0-9][0-9]$')
     userre = re.compile(r'/(profiles|id)/(.+?)/')
+    title_re = re.compile(title_pattern) if title_pattern else None
     with open(outputfile_name, mode="w", encoding="utf-8", newline="") as outputfile:
         writer = csv.writer(outputfile)
-        for root, _, files in os.walk(basepath):
+        writer.writerow(['game_id','game_title', 'review_helpful', 'review_funny', 'username', 'games_owned', 'reviews_written', 'recommended', 'time_played', 'review_date', 'review_text'])
+        for root, _, files in tqdm(list(os.walk(basepath))):
             m = idre.search(root)
             if m:
-                id_ = m.group(1)
+                game_id = m.group(1)
+                game_title = games_df[(games_df['game_id'] == int(game_id)) & (games_df['package_type']=='app')]['game_title'].values[0]
+                if title_re and not title_re.search(str(game_title)):
+                    print('skipping not matching game %s %s' % (game_id, game_title))
+                    continue
             else:
                 print('skipping non-game path ', root, file=sys.stderr)
                 continue
-            for file in files:
+            for file in tqdm(files, leave=False):
                 fullpath = os.path.join(root, file)
-                print('processing', fullpath)
                 with open(fullpath, encoding='utf8') as f:
                     try:
                         soup = BeautifulSoup(json.loads(f.read())['html'], "html.parser")
                     except ValueError:
-                        print('error on ', fullpath, file=sys.stderr)
-                    for reviewdiv in soup.findAll('div', attrs={'class': 'review_box'}):
+                        continue
+                    for reviewdiv in soup.find_all('div', attrs={'class': 'review_box'}):
                         helpful = 0
                         funny = 0
                         elem = reviewdiv.find('div', attrs={'class': 'vote_info'})
@@ -108,8 +115,7 @@ def extract_reviews(basepath, outputfile_name):
                         if elem:
                             content = elem.text.strip()
                         writer.writerow(
-                            (id_, helpful, funny, username, owned, numrev, recco, time, posted, content))
-
+                            (game_id, game_title, helpful, funny, username, owned, numrev, recco, time, posted, content))
 
 def main():
     parser = argparse.ArgumentParser(description='Extractor of Steam reviews')
@@ -117,11 +123,15 @@ def main():
         '-i', '--input', help='Input file or path (all files in subpath are processed)', default="./data/pages/reviews",
         required=False)
     parser.add_argument(
+        '-g', '--games', help='Games file', default='./data/games.csv', required=False)
+    parser.add_argument(
         '-o', '--output', help='Output file', default='./data/reviews.csv', required=False)
+    parser.add_argument(
+        '-t', '--title', help='Process only games whose title matches the given regular expression', required=False)
     args = parser.parse_args()
 
-    extract_reviews(args.input, args.output)
-
+    games_df = pd.read_csv(args.games)
+    extract_reviews(args.input, args.output, games_df, args.title)
 
 if __name__ == '__main__':
     main()

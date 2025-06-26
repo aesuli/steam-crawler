@@ -16,7 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-import csv
 import os
 import re
 import socket
@@ -24,6 +23,9 @@ import urllib
 import urllib.request
 from contextlib import closing
 from time import sleep
+
+import pandas as pd
+from tqdm import tqdm
 
 
 def download_page(url, maxretries, timeout, pause):
@@ -44,23 +46,26 @@ def extract_games(basepath, outputfile_name):
     gamenamere = re.compile(r'<span class="title">(.*?)</span>')
     games = dict()
     for root, _, files in os.walk(basepath):
-        for file in files:
+        for file in tqdm(files):
             fullpath = os.path.join(root, file)
             with open(fullpath, encoding='utf8') as f:
                 htmlpage = f.read()
 
                 gameids = list(gameidre.findall(htmlpage))
                 gamenames = list(gamenamere.findall(htmlpage))
-                for app, id_, name in zip([app for (app, _) in gameids], [id_ for (_, id_) in gameids], gamenames):
-                    games[(app, id_)] = name
-    with open(outputfile_name, mode='w', encoding='utf-8', newline='') as outputfile:
-        writer = csv.writer(outputfile)
-        for app, id_ in games:
-            writer.writerow([app, id_, games[(app, id_)]])
+                for package_type, game_id, game_title in zip([package_type for (package_type, _) in gameids],
+                                                             [game_id for (_, game_id) in gameids], gamenames):
+                    games[(package_type, game_id)] = game_title
+
+    df = pd.DataFrame(
+        [(package_type, game_id, title) for (package_type, game_id), title in games.items()],
+        columns=['package_type', 'game_id', 'game_title']
+    )
+    df.to_csv(outputfile_name, index=False, encoding='utf-8')
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Crawler of Steam game ids and names')
+    parser = argparse.ArgumentParser(description='Extractor of Steam game ids and names from crawled HTML pages.')
     parser.add_argument(
         '-i', '--input', help='Input file or path (all files in subpath are processed)', default='./data/pages/games',
         required=False)
