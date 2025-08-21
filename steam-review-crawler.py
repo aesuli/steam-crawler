@@ -16,15 +16,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-import pandas as pd
+import json
 import os
+import pandas as pd
 import re
 import socket
 import string
 import urllib
-import urllib.request
 import urllib.parse
-import json
+import urllib.request
+import zipfile
 from contextlib import closing
 from time import sleep
 
@@ -43,7 +44,7 @@ def download_page(url, maxretries, timeout, pause):
 
 
 def getgameids(filename):
-    df = pd.read_csv(filename, encoding='utf8', header=None)
+    df = pd.read_csv(filename, encoding='utf8')
     ids = set(df.iloc[:, :3].itertuples(index=False, name=None))
     return ids
 
@@ -55,16 +56,18 @@ def getgamereviews(ids, language, timeout, maxretries, pause, out):
 
     for (dir, id_, name) in ids:
         if dir == 'bundle':
-            print('skipping bundle %s %s' % (id_, name))
+            print(f'skipping bundle {id_} {name}')
             continue
+        if type(id_) is not str:
+            id_ = str(id_)
 
-        gamedir = os.path.join(out, 'pages', 'reviews', language,  '-'.join((dir, id_)))
+        gamedir = os.path.join(out, 'pages', 'reviews', language, '-'.join((dir, id_)))
 
-        donefilename = os.path.join(gamedir, 'reviews-done.txt')
+        zipfilename = os.path.join(gamedir, 'reviews.zip')
         if not os.path.exists(gamedir):
             os.makedirs(gamedir)
-        elif os.path.exists(donefilename):
-            print('skipping app %s %s' % (id_, name))
+        elif os.path.exists(zipfilename):
+            print(f'skipping app {id_} {name}')
             continue
 
         print(dir, id_, name)
@@ -80,14 +83,14 @@ def getgamereviews(ids, language, timeout, maxretries, pause, out):
             htmlpage = download_page(url, maxretries, timeout, pause)
 
             if htmlpage is None:
-                print('Error downloading the URL: ' + url)
+                print('Error downloading from ' + url)
                 sleep(pause * 3)
                 errorCount += 1
                 if errorCount >= maxError:
                     print('Max error!')
                     break
             else:
-                with open(os.path.join(gamedir, 'reviews-%s.html' % page), 'w', encoding='utf-8') as f:
+                with open(os.path.join(gamedir, f'reviews-{page}.html'), 'w', encoding='utf-8') as f:
                     htmlpage = htmlpage.decode()
                     if endre.search(htmlpage):
                         break
@@ -96,8 +99,15 @@ def getgamereviews(ids, language, timeout, maxretries, pause, out):
                     parsed_json = (json.loads(htmlpage))
                     cursor = urllib.parse.quote(parsed_json['cursor'])
 
-        with open(donefilename, 'w', encoding='utf-8') as f:
-            pass
+        # put all the html files that are in the gamedir in a zip file called reviews.zip
+        # then remove the html files
+        with zipfile.ZipFile(zipfilename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, _, files in os.walk(gamedir):
+                for file in files:
+                    if file.endswith('.html'):
+                        fullpath = os.path.join(root, file)
+                        zipf.write(fullpath, os.path.relpath(fullpath, gamedir))
+                        os.remove(fullpath)
 
 
 def main():
@@ -130,7 +140,7 @@ def main():
 
     ids = getgameids(args.ids)
 
-    print('%s games' % len(ids))
+    print(f'{len(ids)} games')
 
     getgamereviews(ids, args.language, args.timeout, args.maxretries, args.pause, args.out)
 

@@ -49,17 +49,17 @@ def getgamepages(timeout, maxretries, pause, out, force):
 
     retries = 0
     while True:
-        page_file = os.path.join(pagedir, 'games-page-%s.html' % page)
+        page_file = os.path.join(pagedir, f'games-page-{page}.html')
         if os.path.exists(page_file) and not force:
-            print('File %s already exists, skipping.' % page_file)
+            print(f'File {page_file} already exists, skipping.')
             page += 1
             continue
-        url = '%s%s' % (baseurl, page)
+        url = f'{baseurl}{page}'
         print(page, url)
         htmlpage = download_page(url, maxretries, timeout, pause)
 
         if htmlpage is None:
-            print('Error downloading the URL: ' + url)
+            print('Error downloading from ' + url)
             sleep(pause * 10)
         else:
             htmlpage = htmlpage.decode()
