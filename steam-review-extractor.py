@@ -120,7 +120,7 @@ def extract_reviews(basepath, outputfile_name, games_df, title_pattern):
 def main():
     parser = argparse.ArgumentParser(description='Extractor of Steam reviews')
     parser.add_argument(
-        '-i', '--input', help='Input file or path (all files in subpath are processed)', default="./data/pages/reviews",
+        '-i', '--input', help='Input file or path (all files in subpath are processed)', default="./data/pages/reviews/all",
         required=False)
     parser.add_argument(
         '-g', '--games', help='Games file', default='./data/games.csv', required=False)

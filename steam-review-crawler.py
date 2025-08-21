@@ -48,9 +48,9 @@ def getgameids(filename):
     return ids
 
 
-def getgamereviews(ids, timeout, maxretries, pause, out):
+def getgamereviews(ids, language, timeout, maxretries, pause, out):
     urltemplate = string.Template(
-        'http://store.steampowered.com//appreviews/$id?cursor=$cursor&filter=recent&language=english')
+        f'http://store.steampowered.com//appreviews/$id?cursor=$cursor&filter=recent&language={language}')
     endre = re.compile(r'({"success":2})|(no_more_reviews)')
 
     for (dir, id_, name) in ids:
@@ -58,7 +58,7 @@ def getgamereviews(ids, timeout, maxretries, pause, out):
             print('skipping bundle %s %s' % (id_, name))
             continue
 
-        gamedir = os.path.join(out, 'pages', 'reviews', '-'.join((dir, id_)))
+        gamedir = os.path.join(out, 'pages', 'reviews', language,  '-'.join((dir, id_)))
 
         donefilename = os.path.join(gamedir, 'reviews-done.txt')
         if not os.path.exists(gamedir):
@@ -105,6 +105,9 @@ def main():
     parser.add_argument('-f', '--force', help='Force download even if already successfully downloaded', required=False,
                         action='store_true')
     parser.add_argument(
+        '-l', '--language', help='Language of the reviews. Default: all',
+        required=False, default='all')
+    parser.add_argument(
         '-t', '--timeout', help='Timeout in seconds for http connections. Default: 180',
         required=False, type=int, default=180)
     parser.add_argument(
@@ -129,7 +132,7 @@ def main():
 
     print('%s games' % len(ids))
 
-    getgamereviews(ids, args.timeout, args.maxretries, args.pause, args.out)
+    getgamereviews(ids, args.language, args.timeout, args.maxretries, args.pause, args.out)
 
 
 if __name__ == '__main__':
