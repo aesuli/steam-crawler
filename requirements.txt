@@ -1,3 +1,5 @@
 beautifulsoup4
 tqdm
 pandas
+lingua-language-detector
+dask
